@@ -105,7 +105,7 @@ class App(tk.Tk):
             self.lbLados.place_forget()
             self.txLados.place_forget()
         elif figura == "Polígono":
-            self.lbBase.config(text="Ingrese Lado:")
+            self.lbBase.config(text="Ingrese longitud de lado:")
             self.lbAltura.place_forget()
             self.txAltura.place_forget()
             self.lbLados.place(x=10, y=110)
