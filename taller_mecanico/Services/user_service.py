@@ -17,23 +17,12 @@ class UserService:
             return user
         return None
 
-    def update_user(self, user_id, name=None, username=None, password=None, profile=None):
+    def update_user(self, user: User):
         # Obtener el usuario actual
-        user = self.get_user(user_id)
-        if user:
-            # Actualizar los atributos del usuario si se proporcionan
-            if name:
-                user.name = name
-            if username:
-                user.username = username
-            if password:
-                user.password = password
-            if profile:
-                user.profile = profile
-            # Actualizar el usuario en la base de datos
-            self.user_dao.update_user(user_id, user)
-        else:
+        existing_user = self.user_dao.get_user_by_id(user.id)
+        if not existing_user:
             raise ValueError("User not found")
+        self.user_dao.update_user(user)
 
     def delete_user(self, user_id):
         # Eliminar el usuario de la base de datos
