@@ -51,16 +51,16 @@ class UserDAO:
             return User(row['usuario_id'], row['nombre'], row['username'], row['password'], row['perfil'])
         return None
 
-    def update_user(user: User):
+    def update_user(self, user: User):
         """Actualiza la información de un usuario existente en la base de datos."""
         conn = get_connection()
         cursor = conn.cursor()
         query = """
         UPDATE usuarios
-        SET nombre = %s, password = %s, perfil = %s
-        WHERE username = %s
+        SET nombre = %s, username = %s, password = %s, perfil = %s
+        WHERE usuario_id = %s
         """
-        values = (user.name, user.password, user.profile, user.username)
+        values = (user.name, user.username, user.password, user.profile, user.id)
         cursor.execute(query, values)
         conn.commit()
         cursor.close()
