@@ -9,6 +9,7 @@ from Controllers.user_controller import UserController
 from Models.user_model import User
 from Services.user_service import UserService
 
+global editing_mode
 
 class LoginWindow:
     def __init__(self, root):
@@ -130,6 +131,8 @@ class UsersWindow:
         self.root = root
         self.root.title("Users")
         self.user_service = UserService()
+        global editing_mode
+        editing_mode = False
 
         # Crear un contenedor principal
         self.frame = ttk.Frame(self.root, padding="5 5 5 5")
@@ -185,7 +188,7 @@ class UsersWindow:
         self.cancel_button = ttk.Button(button_frame, text="Cancelar", command=self.on_cancel)
         self.cancel_button.grid(row=0, column=2, padx=5)
 
-        self.edit_button = ttk.Button(button_frame, text="Editar")
+        self.edit_button = ttk.Button(button_frame, text="Editar", command=self.on_edit)
         self.edit_button.grid(row=0, column=3, padx=5)
 
         # Ajuste de redimensionamiento de columnas
@@ -202,20 +205,30 @@ class UsersWindow:
         self.cancel_button.config(state='disabled')
 
     def create_user(self):
+        global editing_mode
         name = self.name_entry.get()
         username = self.username_entry.get()
         password = self.password_entry.get()
         profile = self.profile_combobox.get()
         user = User(id=None, name=name, username=username, password=password, profile=profile)
+
         try:
-            self.user_service.create_user(user)
-            messagebox.showinfo("Éxito", "Usuario creado exitosamente.")
+            if editing_mode:
+                user.id = int(self.user_id_label.cget("text"))
+                self.user_service.update_user(user)
+                messagebox.showinfo("Éxito", "Usuario actualizado exitosamente.")
+
+            else:
+                self.user_service.create_user(user)
+                messagebox.showinfo("Éxito", "Usuario creado exitosamente.")
+
             self.limpiar_campos()
             self.disable_fields()
             self.search_button.config(state='enabled')
             self.edit_button.config(state='enabled')
             self.save_button.config(state='disabled')
             self.cancel_button.config(state='disabled')
+            self.new_button.config(state='enabled')
         except Exception as e:
             messagebox.showerror("Error", f"Error al crear el usuario: {e}")
             self.limpiar_campos()
@@ -224,6 +237,20 @@ class UsersWindow:
             self.edit_button.config(state='enabled')
             self.save_button.config(state='disabled')
             self.cancel_button.config(state='disabled')
+            editing_mode = False
+
+    def on_edit(self):
+        global editing_mode
+        if not self.user_id_label.cget("text"):
+            messagebox.showwarning("Advertencia", "Primero debe buscar un usuario antes de editar.")
+            return
+        editing_mode = True
+        self.enable_fields()
+        self.search_button.config(state='disabled')
+        self.edit_button.config(state='disabled')
+        self.save_button.config(state='enabled')
+        self.cancel_button.config(state='enabled')
+        self.new_button.config(state='disabled')
 
     def limpiar_campos(self):
         self.name_entry.delete(0, tk.END)
