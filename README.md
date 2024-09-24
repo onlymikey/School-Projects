@@ -1,2 +1,2 @@
-# softengineprojects
-Projects of my Software Engineering class at university.
+# School-Projects
+Projects from some classes at my university
