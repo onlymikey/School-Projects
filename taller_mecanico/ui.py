@@ -11,11 +11,13 @@ from Models.customer_model import Customer
 from Services.customer_service import CustomerService
 
 global editing_mode
+global logged_in_user_id
 
 class LoginWindow:
     def __init__(self, root):
         self.root = root
         self.user_controller = UserController()
+        self.user_service = UserService()
         self.root.title("Login")
 
         # Crear el contenedor principal
@@ -70,10 +72,18 @@ class LoginWindow:
 
         # Si pasa las verificaciones, intentar verificar en la base de datos
         if self.check_credentials(username, password):
-            messagebox.showinfo("Éxito", "Login exitoso")
-            # Ocultar ventana de login y mostrar la ventana de menú
-            self.frame.grid_forget()
-            MenuWindow(self.root)
+            global logged_in_user_id
+            user = self.user_service.get_user_by_username(username)
+            if user:
+                logged_in_user_id = user.id
+                messagebox.showinfo("Éxito", "Login exitoso")
+                # Ocultar ventana de login y mostrar la ventana de menú
+                self.frame.grid_forget()
+                MenuWindow(self.root)
+                #DEBUG (Security Risk)
+                print(logged_in_user_id)
+            else:
+                messagebox.showerror("Error", "Usuario no encontrado.")
         else:
             messagebox.showerror("Error", "Credenciales incorrectas.")
 
@@ -328,6 +338,8 @@ class CustomersWindow:
         self.root = root
         self.root.title("Customers")
         self.customer_service = CustomerService()
+        self.user_service = UserService()
+        self.user_controller = UserController()
         global editing_mode
         editing_mode = False
 
@@ -343,34 +355,32 @@ class CustomersWindow:
         ttk.Label(self.frame, text="Ingrese ID a buscar:").grid(row=0, column=0, sticky="w", padx=2, pady=2)
         self.id_entry = ttk.Entry(self.frame, width=20)
         self.id_entry.grid(row=0, column=1, padx=2, pady=2, sticky="ew")  # Se ajusta el `sticky` para expandir Entry
-        self.search_button = ttk.Button(self.frame, text="Buscar", command=self.search_user)
+        self.search_button = ttk.Button(self.frame, text="Buscar", command= self.search_customer)
         self.search_button.grid(row=0, column=2, padx=2, pady=2)
 
-        # Fila 2: Label "Usuario ID:"
-        ttk.Label(self.frame, text="Usuario ID:").grid(row=1, column=0, sticky="w", padx=2, pady=2)
-        self.user_id_label = ttk.Label(self.frame, text="")
-        self.user_id_label.grid(row=1, column=1, padx=2, pady=2, sticky="ew")
+        # Fila 2: Label "Cliente ID:"
+        ttk.Label(self.frame, text="Cliente ID:").grid(row=1, column=0, sticky="w", padx=2, pady=2)
+        self.client_id_label = ttk.Label(self.frame, text="")
+        self.client_id_label.grid(row=1, column=1, padx=2, pady=2, sticky="ew")
 
-        # Fila 3: Label "Nombre" + Entry
-        ttk.Label(self.frame, text="Nombre:").grid(row=2, column=0, sticky="w", padx=2, pady=2)
-        self.name_entry = ttk.Entry(self.frame, width=30)
-        self.name_entry.grid(row=2, column=1, padx=2, pady=2, sticky="ew")
-
-        # Fila 4: Label "UserName" + Entry
-        ttk.Label(self.frame, text="UserName:").grid(row=3, column=0, sticky="w", padx=2, pady=2)
+        # Fila 3: Label "UserName" + Entry + Label "User ID" + Entry
+        ttk.Label(self.frame, text="UserName:").grid(row=2, column=0, sticky="w", padx=2, pady=2)
         self.username_entry = ttk.Entry(self.frame, width=30)
-        self.username_entry.grid(row=3, column=1, padx=2, pady=2, sticky="ew")
+        self.username_entry.grid(row=2, column=1, padx=2, pady=2, sticky="ew")
 
-        # Fila 5: Label "Password" + Entry
-        ttk.Label(self.frame, text="Password:").grid(row=4, column=0, sticky="w", padx=2, pady=2)
-        self.password_entry = ttk.Entry(self.frame, show="*", width=30)
-        self.password_entry.grid(row=4, column=1, padx=2, pady=2, sticky="ew")
+        ttk.Label(self.frame, text="User ID:").grid(row=2, column=2, sticky="w", padx=2, pady=2)
+        self.user_id_entry = ttk.Entry(self.frame, width=30)
+        self.user_id_entry.grid(row=2, column=3, padx=2, pady=2, sticky="ew")
 
-        # Fila 6: Label "Perfil" + ComboBox
-        ttk.Label(self.frame, text="Perfil:").grid(row=5, column=0, sticky="w", padx=2, pady=2)
-        self.profile_combobox = ttk.Combobox(self.frame, values=["Administrador", "Secretaria", "Mecanico"], state="readonly")
-        self.profile_combobox.grid(row=5, column=1, padx=2, pady=2, sticky="ew")
-        self.profile_combobox.current(0)
+        # Fila 4: Label "Nombre Cliente" + Entry
+        ttk.Label(self.frame, text="Nombre Cliente:").grid(row=3, column=0, sticky="w", padx=2, pady=2)
+        self.client_name_entry = ttk.Entry(self.frame, width=30)
+        self.client_name_entry.grid(row=3, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 5: Label "Teléfono" + Entry
+        ttk.Label(self.frame, text="Teléfono:").grid(row=4, column=0, sticky="w", padx=2, pady=2)
+        self.phone_entry = ttk.Entry(self.frame, width=30)
+        self.phone_entry.grid(row=4, column=1, padx=2, pady=2, sticky="ew")
 
         # Fila 7: Botones "Nuevo", "Salvar", "Cancelar", "Editar"
         button_frame = ttk.Frame(self.frame)
@@ -379,7 +389,7 @@ class CustomersWindow:
         self.new_button = ttk.Button(button_frame, text="Nuevo", command=self.on_new)
         self.new_button.grid(row=0, column=0, padx=5)
 
-        self.save_button = ttk.Button(button_frame, text="Salvar", command=self.create_user)
+        self.save_button = ttk.Button(button_frame, text="Salvar", command=self.create_client)
         self.save_button.grid(row=0, column=1, padx=5)
 
         self.cancel_button = ttk.Button(button_frame, text="Cancelar", command=self.on_cancel)
@@ -400,4 +410,117 @@ class CustomersWindow:
         self.disable_fields()
         self.save_button.config(state='disabled')
         self.cancel_button.config(state='disabled')
+
+        self.populate_user_info()
+
+    def populate_user_info(self):
+        global logged_in_user_id
+        user = self.user_service.get_user(logged_in_user_id)
+        if user:
+            self.username_entry.config(state='normal')
+            self.username_entry.insert(0, user.username)
+            self.username_entry.config(state='disabled')
+
+            self.user_id_entry.config(state='normal')
+            self.user_id_entry.insert(0, user.id)
+            self.user_id_entry.config(state='disabled')
+
+
+    def search_customer(self):
+        customer_id = self.id_entry.get()
+        if customer_id:
+            try:
+                customer = self.customer_service.get_customer(int(customer_id))
+                if customer:
+                    self.client_id_label.config(text=customer.id)
+                    self.client_name_entry.config(state='normal')
+                    self.client_name_entry.delete(0, tk.END)
+                    self.client_name_entry.insert(0, customer.name)
+                    self.client_name_entry.config(state='disabled')
+
+                    self.phone_entry.config(state='normal')
+                    self.phone_entry.delete(0, tk.END)
+                    self.phone_entry.insert(0, customer.phone)
+                    self.phone_entry.config(state='disabled')
+                else:
+                    messagebox.showerror("Error", "Cliente no encontrado.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al buscar el cliente: {e}")
+        else:
+            messagebox.showerror("Error", "Por favor ingrese un ID de cliente.")
+
+    def on_new(self):
+        self.enable_fields()
+        self.clear_fields()
+        self.search_button.config(state='disabled')
+        self.edit_button.config(state='disabled')
+        self.save_button.config(state='enabled')
+        self.cancel_button.config(state='enabled')
+
+    def create_client(self):
+        global editing_mode
+        name = self.client_name_entry.get()
+        phone = self.phone_entry.get()
+        userid = self.user_id_entry.get()
+        customer = Customer(id=None, name=name, phone=phone, userid=userid)
+
+        try:
+            if editing_mode:
+                customer.id = int(self.client_id_label.cget("text"))
+                self.customer_service.update_customer(customer)
+                messagebox.showinfo("Éxito", "Cliente actualizado exitosamente.")
+            else:
+                self.customer_service.create_customer(customer)
+                messagebox.showinfo("Éxito", "Cliente creado exitosamente.")
+
+            self.clear_fields()
+            self.disable_fields()
+            self.search_button.config(state='enabled')
+            self.edit_button.config(state='enabled')
+            self.save_button.config(state='disabled')
+            self.cancel_button.config(state='disabled')
+            self.new_button.config(state='enabled')
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al crear el cliente: {e}")
+            self.clear_fields()
+            self.disable_fields()
+            self.search_button.config(state='enabled')
+            self.edit_button.config(state='enabled')
+            self.save_button.config(state='disabled')
+            self.cancel_button.config(state='disabled')
+            editing_mode = False
+
+    def on_cancel(self):
+        self.clear_fields()
+        self.disable_fields()
+        self.search_button.config(state='enabled')
+        self.edit_button.config(state='enabled')
+        self.save_button.config(state='disabled')
+        self.cancel_button.config(state='disabled')
+        self.new_button.config(state='enabled')
+
+    def on_edit(self):
+        global editing_mode
+        if not self.client_id_label.cget("text"):
+            messagebox.showwarning("Advertencia", "Primero debe buscar un cliente antes de editar.")
+            return
+        editing_mode = True
+        self.enable_fields()
+        self.search_button.config(state='disabled')
+        self.edit_button.config(state='disabled')
+        self.save_button.config(state='enabled')
+        self.cancel_button.config(state='enabled')
+        self.new_button.config(state='disabled')
+
+    def clear_fields(self):
+        self.client_name_entry.delete(0, tk.END)
+        self.phone_entry.delete(0, tk.END)
+
+    def enable_fields(self):
+        self.client_name_entry.config(state='normal')
+        self.phone_entry.config(state='normal')
+
+    def disable_fields(self):
+        self.client_name_entry.config(state='disabled')
+        self.phone_entry.config(state='disabled')
 
