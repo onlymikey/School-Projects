@@ -17,6 +17,10 @@ class UserService:
             return user
         return None
 
+    def get_user_by_username(self, username: str) -> User:
+        """Obtener un usuario por su nombre de usuario."""
+        return self.user_dao.read_user_by_username(username)
+
     def update_user(self, user: User):
         # Obtener el usuario actual
         existing_user = self.user_dao.get_user_by_id(user.id)
@@ -36,3 +40,5 @@ class UserService:
     def verify_credentials(self, username, password):
         """Verificar si el username y password existen en la base de datos."""
         return self.user_dao.verify_user(username, password)
+
+
