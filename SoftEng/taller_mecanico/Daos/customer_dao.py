@@ -45,8 +45,9 @@ class CustomerDAO:
         query = """
         UPDATE clientes
         SET nombre = %s, telefono = %s
+        WHERE cliente_id = %s
         """
-        values = (customer.name, customer.phone)
+        values = (customer.name, customer.phone, customer.id)
         cursor.execute(query, values)
         conn.commit()
         cursor.close()
