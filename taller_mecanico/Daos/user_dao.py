@@ -25,8 +25,8 @@ class UserDAO:
         cursor.close()
         conn.close()
 
-    def read_user_by_username(username: str) -> User:
-        """Lee un usuario por su nombre de usuario."""
+    def read_user_by_username(self, username: str) -> User:
+        """Obtiene un usuario por su nombre de usuario."""
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         query = "SELECT * FROM usuarios WHERE username = %s"
@@ -35,7 +35,7 @@ class UserDAO:
         cursor.close()
         conn.close()
         if row:
-            return User(row['nombre'], row['username'], row['password'], row['perfil'])
+            return User(row['usuario_id'], row['nombre'], row['username'], row['password'], row['perfil'])
         return None
 
     def get_user_by_id(self, user_id: int) -> User:
