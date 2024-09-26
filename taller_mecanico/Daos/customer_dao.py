@@ -16,17 +16,17 @@ class CustomerDAO:
         conn = get_connection()
         cursor = conn.cursor()
         query = """
-        INSERT INTO clientes (nombre, telefono)
+        INSERT INTO clientes (nombre, telefono, usuario_id)
         VALUES (%s, %s, %s)
         """
-        values = (customer.name, customer.phone)
+        values = (customer.name, customer.phone, customer.userid)
         cursor.execute(query, values)
         conn.commit()
         cursor.close()
         conn.close()
 
     def get_customer_by_id(self, customer_id: int) -> Customer:
-        """Obtiene un usuario por su ID."""
+        """Obtiene un Cliente por su ID."""
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         query = "SELECT * FROM clientes WHERE cliente_id = %s"
@@ -35,7 +35,7 @@ class CustomerDAO:
         cursor.close()
         conn.close()
         if row:
-            return Customer(row['cliente_id'], row['nombre'], row['telefono'])
+            return Customer(row['cliente_id'], row['nombre'], row['telefono'], row['usuario_id'])
         return None
 
     def update_customer(self, customer: Customer):
