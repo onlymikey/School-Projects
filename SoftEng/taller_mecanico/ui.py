@@ -119,7 +119,7 @@ class MenuWindow:
         file_menu = tk.Menu(menu_bar, tearoff=0)
         file_menu.add_command(label="Users", command=self.open_users)
         file_menu.add_command(label="Customers", command=self.open_customers)
-        file_menu.add_command(label="Cars")
+        file_menu.add_command(label="Vehicles", command=self.open_vehicles)
         file_menu.add_command(label="Service")
         file_menu.add_command(label="Parts")
         file_menu.add_separator()  # Línea separadora
@@ -140,6 +140,11 @@ class MenuWindow:
         # Aquí abrirás la interfaz de clientes (lógica aún por implementar)
         self.frame.grid_forget()
         CustomersWindow(self.root)
+
+    def open_vehicles(self):
+        # Aquí abrirás la interfaz de vehículos (lógica aún por implementar)
+        self.frame.grid_forget()
+        VehicleWindow(self.root)
 
 
 class UsersWindow:
@@ -523,4 +528,106 @@ class CustomersWindow:
     def disable_fields(self):
         self.client_name_entry.config(state='disabled')
         self.phone_entry.config(state='disabled')
+
+
+class VehicleWindow:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Vehicle")
+        self.customer_service = CustomerService()
+        global editing_mode
+        editing_mode = False
+
+        # Crear un contenedor principal
+        self.frame = ttk.Frame(self.root, padding="5 5 5 5")
+        self.frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+
+        # Ajustar redimensionamiento
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+
+        # Fila 1: Label "Ingrese Matricula a buscar:" + Entry + Botón "Buscar"
+        ttk.Label(self.frame, text="Ingrese Matricula a buscar:").grid(row=0, column=0, sticky="w", padx=2, pady=2)
+        self.registration_search_entry = ttk.Entry(self.frame, width=20)
+        self.registration_search_entry.grid(row=0, column=1, padx=2, pady=2, sticky="ew")  # Se ajusta el `sticky` para expandir Entry
+        self.search_button = ttk.Button(self.frame, text="Buscar")
+        self.search_button.grid(row=0, column=2, padx=2, pady=2)
+
+        # Fila 2: Label "Cliente ID:"
+        ttk.Label(self.frame, text="Matricula:").grid(row=1, column=0, sticky="w", padx=2, pady=2)
+        self.registration_entry = ttk.Entry(self.frame, width=20)
+        self.registration_entry.grid(row=1, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 3: Label "Nombre Cliente" + Entry + Label "Cliente ID" + Entry
+        ttk.Label(self.frame, text="Nombre Cliente:").grid(row=2, column=0, sticky="w", padx=2, pady=2)
+        self.client_name_entry = ttk.Entry(self.frame, width=30)
+        self.client_name_entry.grid(row=2, column=1, padx=2, pady=2, sticky="ew")
+
+        ttk.Label(self.frame, text="Cliente ID:").grid(row=2, column=2, sticky="w", padx=2, pady=2)
+        self.client_id_entry = ttk.Entry(self.frame, width=10)
+        self.client_id_entry.grid(row=2, column=3, padx=2, pady=2, sticky="ew")
+
+        # Fila 4: Label "Marca" + Entry
+        ttk.Label(self.frame, text="Marca:").grid(row=3, column=0, sticky="w", padx=2, pady=2)
+        self.brand_entry = ttk.Entry(self.frame, width=30)
+        self.brand_entry.grid(row=3, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 5: Label "Modelo" + Entry
+        ttk.Label(self.frame, text="Modelo:").grid(row=4, column=0, sticky="w", padx=2, pady=2)
+        self.model_entry = ttk.Entry(self.frame, width=30)
+        self.model_entry.grid(row=4, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 7: Botones "Nuevo", "Salvar", "Cancelar", "Editar"
+        button_frame = ttk.Frame(self.frame)
+        button_frame.grid(row=6, column=0, columnspan=3, pady=10)
+
+        self.new_button = ttk.Button(button_frame, text="Nuevo", command=self.on_new)
+        self.new_button.grid(row=0, column=0, padx=5)
+
+        self.save_button = ttk.Button(button_frame, text="Salvar", command=self.create_client)
+        self.save_button.grid(row=0, column=1, padx=5)
+
+        self.cancel_button = ttk.Button(button_frame, text="Cancelar", command=self.on_cancel)
+        self.cancel_button.grid(row=0, column=2, padx=5)
+
+        self.edit_button = ttk.Button(button_frame, text="Editar", command=self.on_edit)
+        self.edit_button.grid(row=0, column=3, padx=5)
+
+        # Ajuste de redimensionamiento de columnas
+        self.frame.grid_columnconfigure(0, weight=0)  # Evitamos que se expanda demasiado
+        self.frame.grid_columnconfigure(1, weight=1)  # Solo la columna 1 se expandirá
+        self.frame.grid_columnconfigure(2, weight=0)  # Evitamos que la columna del botón Buscar se expanda
+
+        # Ajustar tamaño de la ventana
+        self.root.geometry("600x250")
+
+        # Desactivar campos de texto y botones por defecto
+        self.save_button.config(state='disabled')
+        self.cancel_button.config(state='disabled')
+
+        # Desactivar campos de texto y botones por defecto
+        self.disable_fields()
+        self.save_button.config(state='disabled')
+        self.cancel_button.config(state='disabled')
+
+    def clear_fields(self):
+        self.registration_entry.delete(0, tk.END)
+        self.client_name_entry.delete(0, tk.END)
+        self.client_id_entry.delete(0, tk.END)
+        self.brand_entry.delete(0, tk.END)
+        self.model_entry.delete(0, tk.END)
+
+    def enable_fields(self):
+        self.registration_entry.config(state='normal')
+        self.client_name_entry.config(state='normal')
+        self.client_id_entry.config(state='normal')
+        self.brand_entry.config(state='normal')
+        self.model_entry.config(state='normal')
+
+    def disable_fields(self):
+        self.registration_entry.config(state='disabled')
+        self.client_name_entry.config(state='disabled')
+        self.client_id_entry.config(state='disabled')
+        self.brand_entry.config(state='disabled')
+        self.model_entry.config(state='disabled')
 
