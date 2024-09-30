@@ -34,7 +34,7 @@ class UserService:
 
     def list_users(self):
         # Obtener todos los usuarios desde la base de datos
-        users_data = self.user_dao.get_all_users()
+        users_data = self.user_dao.list_all_users()
         return [User(**data) for data in users_data]
     
     def verify_credentials(self, username, password):
