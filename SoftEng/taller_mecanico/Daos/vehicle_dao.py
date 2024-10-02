@@ -1,7 +1,7 @@
 import mysql.connector
 from database import get_connection
 from Models.vehicle_model import Vehicle
-class UserDAO:
+class VehicleDAO:
     def __init__(self):
         self.connection = mysql.connector.connect(
             host="localhost",
@@ -16,16 +16,16 @@ class UserDAO:
         conn = get_connection()
         cursor = conn.cursor()
         query = """
-        INSERT INTO usuarios (matricula, marca, modelo)
-        VALUES (%s, %s, %s)
+        INSERT INTO vehiculos (matricula, cliente_id, marca, modelo)
+        VALUES (%s, %s, %s, %s)
         """
-        values = (vehicle.registration, vehicle.brand, vehicle.model)
+        values = (vehicle.registration, vehicle.clientid, vehicle.brand, vehicle.model)
         cursor.execute(query, values)
         conn.commit()
         cursor.close()
         conn.close()
 
-    def read_vehicle_by_registration(self, registration: str) -> Vehicle:
+    def get_vehicle_by_registration(self, registration: str) -> Vehicle:
         """Obtiene un vehiculo por su matricula."""
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -35,7 +35,7 @@ class UserDAO:
         cursor.close()
         conn.close()
         if row:
-            return Vehicle(row['matricula'], row['marca'], row['clientid'], row['modelo'])
+            return Vehicle(row['matricula'], row['cliente_id'], row['marca'], row['modelo'])
         return None
 
     def update_vehicle(self, vehicle: Vehicle):
@@ -44,10 +44,10 @@ class UserDAO:
         cursor = conn.cursor()
         query = """
         UPDATE vehiculos
-        SET marca = %s, modelo = %s
+        SET marca = %s, modelo = %s, cliente_id = %s
         WHERE matricula = %s
         """
-        values = (vehicle.brand, vehicle.model, vehicle.registration)
+        values = (vehicle.brand, vehicle.model, vehicle.clientid, vehicle.registration)
         cursor.execute(query, values)
         conn.commit()
         cursor.close()
