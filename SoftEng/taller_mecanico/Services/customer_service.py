@@ -24,3 +24,8 @@ class CustomerService:
             raise ValueError("Customer not found")
         self.customer_dao.update_customer(customer)
 
+    def get_customer_by_name(self, name):
+        return self.customer_dao.get_customer_by_name(name)
+
+    def get_all_customer_names(self):
+        return self.customer_dao.get_all_customer_names()
