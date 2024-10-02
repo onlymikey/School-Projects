@@ -3,15 +3,29 @@ from tkinter import ttk
 from tkinter import messagebox
 import re
 
+# User imports
 from Controllers.user_controller import UserController
 from Models.user_model import User
 from Services.user_service import UserService
 
+# Customer imports
 from Models.customer_model import Customer
 from Services.customer_service import CustomerService
 
+# Vehicle imports
+from Services.vehicle_service import VehicleService
+from Models.vehicle_model import Vehicle
+
 global editing_mode
 global logged_in_user_id
+
+# Función para validar que los campos no estén vacíos
+def validate_fields(entries):
+    for entry in entries:
+        if not entry.get().strip():
+            messagebox.showerror("Error", "Todos los campos deben estar llenos.")
+            return False
+    return True
 
 class LoginWindow:
     def __init__(self, root):
@@ -227,6 +241,8 @@ class UsersWindow:
 
     def create_user(self):
         global editing_mode
+        if not validate_fields([self.name_entry, self.username_entry, self.password_entry, self.profile_combobox]):
+            return
         name = self.name_entry.get()
         username = self.username_entry.get()
         password = self.password_entry.get()
@@ -464,6 +480,8 @@ class CustomersWindow:
 
     def create_client(self):
         global editing_mode
+        if not validate_fields([self.client_name_entry, self.phone_entry, self.user_id_entry]):
+            return
         name = self.client_name_entry.get()
         phone = self.phone_entry.get()
         userid = self.user_id_entry.get()
@@ -534,6 +552,7 @@ class VehicleWindow:
     def __init__(self, root):
         self.root = root
         self.root.title("Vehicle")
+        self.vehicle_service = VehicleService()
         self.customer_service = CustomerService()
         global editing_mode
         editing_mode = False
@@ -550,7 +569,7 @@ class VehicleWindow:
         ttk.Label(self.frame, text="Ingrese Matricula a buscar:").grid(row=0, column=0, sticky="w", padx=2, pady=2)
         self.registration_search_entry = ttk.Entry(self.frame, width=20)
         self.registration_search_entry.grid(row=0, column=1, padx=2, pady=2, sticky="ew")  # Se ajusta el `sticky` para expandir Entry
-        self.search_button = ttk.Button(self.frame, text="Buscar")
+        self.search_button = ttk.Button(self.frame, text="Buscar", command=self.search_vehicle)
         self.search_button.grid(row=0, column=2, padx=2, pady=2)
 
         # Fila 2: Label "Cliente ID:"
@@ -558,13 +577,14 @@ class VehicleWindow:
         self.registration_entry = ttk.Entry(self.frame, width=20)
         self.registration_entry.grid(row=1, column=1, padx=2, pady=2, sticky="ew")
 
-        # Fila 3: Label "Nombre Cliente" + Entry + Label "Cliente ID" + Entry
+        # Fila 3: Label "Nombre Cliente" + ComboBox + Label "Cliente ID" + Entry
         ttk.Label(self.frame, text="Nombre Cliente:").grid(row=2, column=0, sticky="w", padx=2, pady=2)
-        self.client_name_entry = ttk.Entry(self.frame, width=30)
-        self.client_name_entry.grid(row=2, column=1, padx=2, pady=2, sticky="ew")
+        self.client_name_combobox = ttk.Combobox(self.frame, state="readonly")
+        self.client_name_combobox.grid(row=2, column=1, padx=2, pady=2, sticky="ew")
+        self.client_name_combobox.bind("<<ComboboxSelected>>", self.on_client_selected)
 
         ttk.Label(self.frame, text="Cliente ID:").grid(row=2, column=2, sticky="w", padx=2, pady=2)
-        self.client_id_entry = ttk.Entry(self.frame, width=10)
+        self.client_id_entry = ttk.Entry(self.frame, width=10, state="disabled")
         self.client_id_entry.grid(row=2, column=3, padx=2, pady=2, sticky="ew")
 
         # Fila 4: Label "Marca" + Entry
@@ -584,7 +604,7 @@ class VehicleWindow:
         self.new_button = ttk.Button(button_frame, text="Nuevo", command=self.on_new)
         self.new_button.grid(row=0, column=0, padx=5)
 
-        self.save_button = ttk.Button(button_frame, text="Salvar", command=self.create_client)
+        self.save_button = ttk.Button(button_frame, text="Salvar", command=self.create_vehicle)
         self.save_button.grid(row=0, column=1, padx=5)
 
         self.cancel_button = ttk.Button(button_frame, text="Cancelar", command=self.on_cancel)
@@ -610,23 +630,156 @@ class VehicleWindow:
         self.save_button.config(state='disabled')
         self.cancel_button.config(state='disabled')
 
+        # Populate customer names in the combobox
+        self.populate_customer_names()
+
+    def populate_customer_names(self):
+        customer_names = self.customer_service.get_all_customer_names()
+        self.client_name_combobox['values'] = customer_names
+        print(f"Combobox populated with: {customer_names}")
+
+    def on_client_selected(self, event):
+        print("on_client_selected function executed")  # Debug print
+        selected_name = self.client_name_combobox.get()
+        print(f"Selected client name: {selected_name}")  # Debug print
+        customer = self.customer_service.get_customer_by_name(selected_name)
+        if customer:
+            self.client_id_entry.config(state='normal')
+            self.client_id_entry.delete(0, tk.END)
+            self.client_id_entry.insert(0, customer.id)
+            self.client_id_entry.config(state='disabled')
+            print(f"Debug: client_id_entry type: {type(customer.id)}")  # Debug print to verify data type
+
+    def search_vehicle(self):
+        registration = self.registration_search_entry.get()
+        if registration:
+            try:
+                vehicle = self.vehicle_service.get_vehicle_by_registration(registration)
+                if vehicle:
+                    self.registration_entry.config(state='normal')
+                    self.registration_entry.delete(0, tk.END)
+                    self.registration_entry.insert(0, vehicle.registration)
+                    self.registration_entry.config(state='disabled')
+
+                    # Debug print to show the clientid being sent
+                    print(f"Debug: clientid sent to get_customer: {vehicle.clientid}")
+
+                    customer = self.customer_service.get_customer(vehicle.clientid)
+                    print(f"Debug: Customer found: {customer}") # Debug print
+                    if customer:
+                        self.client_name_combobox.set(customer.name)
+                        self.client_id_entry.config(state='normal')
+                        self.client_id_entry.delete(0, tk.END)
+                        self.client_id_entry.insert(0, customer.id)
+                        self.client_id_entry.config(state='disabled')
+                        print(f"Debug: client_id_entry type: {type(customer.id)}")  # Debug print to verify data type
+                    else:
+                        messagebox.showerror("Error", "Cliente no encontrado.")
+
+                    self.brand_entry.config(state='normal')
+                    self.brand_entry.delete(0, tk.END)
+                    self.brand_entry.insert(0, vehicle.brand)
+                    self.brand_entry.config(state='disabled')
+
+                    self.model_entry.config(state='normal')
+                    self.model_entry.delete(0, tk.END)
+                    self.model_entry.insert(0, vehicle.model)
+                    self.model_entry.config(state='disabled')
+                else:
+                    messagebox.showerror("Error", "Vehículo no encontrado.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al buscar el vehículo: {e}")
+        else:
+            messagebox.showerror("Error", "Por favor ingrese una matrícula.")
+
+    def on_new(self):
+        self.clear_fields()
+        self.enable_fields()
+        self.search_button.config(state='disabled')
+        self.edit_button.config(state='disabled')
+        self.save_button.config(state='enabled')
+        self.cancel_button.config(state='enabled')
+
+    def create_vehicle(self):
+        global editing_mode
+        if not validate_fields([self.registration_entry, self.client_name_combobox, self.brand_entry, self.model_entry]):
+            return
+        registration = self.registration_entry.get()
+        client_id = self.client_id_entry.get()
+        brand = self.brand_entry.get()
+        model = self.model_entry.get()
+        vehicle = Vehicle(registration, client_id, brand, model)
+
+        try:
+            if editing_mode:
+                vehicle.registration = self.registration_entry.get()
+                self.vehicle_service.update_vehicle(vehicle)
+                messagebox.showinfo("Éxito", "Vehículo actualizado exitosamente.")
+            else:
+                self.vehicle_service.create_vehicle(vehicle)
+                messagebox.showinfo("Éxito", "Vehículo creado exitosamente.")
+
+            self.clear_fields()
+            self.disable_fields()
+            self.search_button.config(state='enabled')
+            self.edit_button.config(state='enabled')
+            self.save_button.config(state='disabled')
+            self.cancel_button.config(state='disabled')
+            self.new_button.config(state='enabled')
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al crear el vehículo: {e}")
+            self.clear_fields()
+            self.disable_fields()
+            self.search_button.config(state='enabled')
+            self.edit_button.config(state='enabled')
+            self.save_button.config(state='disabled')
+            self.cancel_button.config(state='disabled')
+            editing_mode = False
+
+    def on_cancel(self):
+        self.clear_fields()
+        self.disable_fields()
+        self.search_button.config(state='enabled')
+        self.edit_button.config(state='enabled')
+        self.save_button.config(state='disabled')
+        self.cancel_button.config(state='disabled')
+        self.new_button.config(state='enabled')
+
+    def on_edit(self):
+        global editing_mode
+        client_id_text = self.client_id_entry.get()
+        if not client_id_text or int(client_id_text) == 0:
+            messagebox.showwarning("Advertencia", "Primero debe buscar un vehículo antes de editar.")
+            return
+        editing_mode = True
+        self.enable_fields()
+        self.registration_entry.config(state='disabled')
+        self.search_button.config(state='disabled')
+        self.edit_button.config(state='disabled')
+        self.save_button.config(state='enabled')
+        self.cancel_button.config(state='enabled')
+        self.new_button.config(state='disabled')
+
     def clear_fields(self):
-        self.registration_entry.delete(0, tk.END)
-        self.client_name_entry.delete(0, tk.END)
-        self.client_id_entry.delete(0, tk.END)
+        self.registration_entry.config(state='normal')  # Ensure the entry is editable
+        self.registration_entry.delete(0, tk.END)  # Clear the entry field
+        self.registration_entry.config(state='disabled')  # Optionally, disable the entry again if needed
+        self.client_name_combobox.delete(0, tk.END)
+        self.client_id_entry.config(state='normal')  # Ensure the entry is editable
+        self.client_id_entry.delete(0, tk.END)  # Clear the entry field
+        self.client_id_entry.config(state='disabled')  # Optionally, disable the entry again if needed
         self.brand_entry.delete(0, tk.END)
         self.model_entry.delete(0, tk.END)
 
     def enable_fields(self):
         self.registration_entry.config(state='normal')
-        self.client_name_entry.config(state='normal')
-        self.client_id_entry.config(state='normal')
+        self.client_name_combobox.config(state='normal')
         self.brand_entry.config(state='normal')
         self.model_entry.config(state='normal')
 
     def disable_fields(self):
         self.registration_entry.config(state='disabled')
-        self.client_name_entry.config(state='disabled')
+        self.client_name_combobox.config(state='disabled')
         self.client_id_entry.config(state='disabled')
         self.brand_entry.config(state='disabled')
         self.model_entry.config(state='disabled')
