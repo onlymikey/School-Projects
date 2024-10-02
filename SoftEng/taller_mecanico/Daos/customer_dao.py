@@ -38,6 +38,19 @@ class CustomerDAO:
             return Customer(row['cliente_id'], row['nombre'], row['telefono'], row['usuario_id'])
         return None
 
+    def get_customer_by_name(self, name: str) -> Customer:
+        """Obtiene un Cliente por su nombre."""
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT * FROM clientes WHERE nombre = %s"
+        cursor.execute(query, (name,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if row:
+            return Customer(row['cliente_id'], row['nombre'], row['telefono'], row['usuario_id'])
+        return None
+
     def update_customer(self, customer: Customer):
         """Actualiza la información de un usuario existente en la base de datos."""
         conn = get_connection()
@@ -52,3 +65,14 @@ class CustomerDAO:
         conn.commit()
         cursor.close()
         conn.close()
+
+    def get_all_customer_names(self):
+        """Obtiene todos los nombres de los clientes."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        query = "SELECT nombre FROM clientes"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return [row[0] for row in rows]
