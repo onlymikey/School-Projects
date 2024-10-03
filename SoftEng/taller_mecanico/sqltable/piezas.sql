@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 03-10-2024 a las 09:04:26
+-- Tiempo de generación: 03-10-2024 a las 22:25:59
 -- Versión del servidor: 8.3.0
 -- Versión de PHP: 8.2.18
 
@@ -32,15 +32,17 @@ CREATE TABLE IF NOT EXISTS `piezas` (
   `id_pieza` int NOT NULL AUTO_INCREMENT,
   `descripcion` text NOT NULL,
   `stock` int NOT NULL,
-  PRIMARY KEY (`id_pieza`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id_pieza`),
+  UNIQUE KEY `id_pieza` (`id_pieza`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Volcado de datos para la tabla `piezas`
 --
 
 INSERT INTO `piezas` (`id_pieza`, `descripcion`, `stock`) VALUES
-(1, 'Ruedasxdxdxd', 5);
+(2, 'Motor', 3),
+(3, 'Ruedas', 50);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

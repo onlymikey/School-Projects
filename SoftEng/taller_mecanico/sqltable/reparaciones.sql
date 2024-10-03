@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 03-10-2024 a las 09:04:35
+-- Tiempo de generación: 03-10-2024 a las 22:26:10
 -- Versión del servidor: 8.3.0
 -- Versión de PHP: 8.2.18
 
@@ -37,20 +37,19 @@ CREATE TABLE IF NOT EXISTS `reparaciones` (
   `cantidad` int NOT NULL,
   `problema` text NOT NULL,
   PRIMARY KEY (`id_reparacion`),
-  UNIQUE KEY `id_pieza_2` (`id_pieza`),
-  UNIQUE KEY `matricula_2` (`matricula`),
-  UNIQUE KEY `matricula_3` (`matricula`),
+  UNIQUE KEY `id_reparacion` (`id_reparacion`,`matricula`,`id_pieza`),
   KEY `matricula` (`matricula`,`id_pieza`),
-  KEY `id_pieza` (`id_pieza`),
-  KEY `matricula_4` (`matricula`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `id_pieza` (`id_pieza`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Volcado de datos para la tabla `reparaciones`
 --
 
 INSERT INTO `reparaciones` (`id_reparacion`, `matricula`, `id_pieza`, `fecha_entrada`, `fecha_salida`, `cantidad`, `problema`) VALUES
-(6, 'XAW01', 1, '2023-02-01', '2024-02-02', 5, 'fwfsafsa');
+(7, 'XAW01', 2, '2024-02-12', '2024-04-12', 1, 'si'),
+(10, 'XAW01', 2, '2024-12-11', '2024-12-12', 1, 'dfdsfdsa'),
+(11, 'XAW02', 3, '2024-10-03', '2024-10-04', 50, 'fsafas');
 
 --
 -- Restricciones para tablas volcadas
