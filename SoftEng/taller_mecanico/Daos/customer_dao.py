@@ -76,3 +76,16 @@ class CustomerDAO:
         cursor.close()
         conn.close()
         return [row[0] for row in rows]
+
+    def get_customer_by_phone_number(self, phone_number: str) -> Customer:
+        """Retrieve a customer by their phone number."""
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT * FROM clientes WHERE telefono = %s"
+        cursor.execute(query, (phone_number,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if row:
+            return Customer(row['cliente_id'], row['nombre'], row['telefono'], row['usuario_id'])
+        return None
