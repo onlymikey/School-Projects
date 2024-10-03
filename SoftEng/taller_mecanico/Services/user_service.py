@@ -8,7 +8,14 @@ class UserService:
 
     def create_user(self, user: User):
         # Insertar el usuario en la base de datos
+        if self.is_username_exists(user.username):
+            raise ValueError("Ya existe un usuario con este username.")
         self.user_dao.create_user(user)
+
+    def is_username_exists(self, username: str) -> bool:
+        """Check if a user with the given username already exists."""
+        user = self.user_dao.read_user_by_username(username)
+        return user is not None
 
     def get_user(self, user_id):
         # Obtener el usuario desde la base de datos
