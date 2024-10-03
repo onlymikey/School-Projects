@@ -26,3 +26,5 @@ class PartsService:
         # Obtener todos los nombres de las partes
         return self.parts_dao.get_all_parts_names()
 
+    def update_stock(self, partid, new_stock):
+        self.parts_dao.update_stock(partid, new_stock)

@@ -76,3 +76,18 @@ class PartsDAO:
         cursor.close()
         conn.close()
         return [row[0] for row in rows]
+
+    def update_stock(self, partid, new_stock):
+        """Actualiza el stock de una parte."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        query = """
+        UPDATE piezas
+        SET stock = %s
+        WHERE id_pieza = %s
+        """
+        values = (new_stock, partid)
+        cursor.execute(query, values)
+        conn.commit()
+        cursor.close()
+        conn.close()
