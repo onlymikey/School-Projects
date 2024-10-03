@@ -6,9 +6,7 @@ from datetime import datetime
 
 # User imports
 from Controllers.user_controller import UserController
-from Models.repair_model import Repair
 from Models.user_model import User
-from Services.parts_service import PartsService
 from Services.user_service import UserService
 
 # Customer imports
@@ -106,7 +104,7 @@ class LoginWindow:
                 messagebox.showinfo("Éxito", "Login exitoso")
                 # Ocultar ventana de login y mostrar la ventana de menú
                 self.frame.grid_forget()
-                MenuWindow(self.root)
+                MenuWindow(self.root, user)
                 #DEBUG (Security Risk)
                 print(logged_in_user_id)
             else:
@@ -120,11 +118,12 @@ class LoginWindow:
 
 
 class MenuWindow:
-    def __init__(self, root):
+    def __init__(self, root, user):
         self.root = root
         self.root.title("Menú Principal")
+        self.user = user
 
-        # Ajustar el tamaño de la ventana a 1000x500 píxeles (relación 100x50)
+    # Ajustar el tamaño de la ventana a 1000x500 píxeles (relación 100x50)
         self.root.geometry("700x350")
 
         # Crear un contenedor
@@ -157,6 +156,27 @@ class MenuWindow:
 
         # Configurar la barra de menú en la ventana
         self.root.config(menu=menu_bar)
+
+        # Control access to menu items based on user role
+        self.control_access(file_menu)
+
+    def control_access(self, file_menu):
+        # Disable menu items based on user role
+        if self.user.profile == 'Secretaria':
+            file_menu.entryconfig("Users", state="disabled")
+            file_menu.entryconfig("Parts", state="disabled")
+            file_menu.entryconfig("Repairs", state="disabled")
+        elif self.user.profile == 'Mecanico':
+            file_menu.entryconfig("Users", state="disabled")
+            file_menu.entryconfig("Customers", state="disabled")
+            file_menu.entryconfig("Vehicles", state="disabled")
+            file_menu.entryconfig("Parts", state="disabled")
+        elif self.user.profile != 'Administrador':
+            if self.user.profile != 'Secretaria':
+                file_menu.entryconfig("Customers", state="disabled")
+                file_menu.entryconfig("Vehicles", state="disabled")
+            if self.user.profile != 'Mecanico':
+                file_menu.entryconfig("Repairs", state="disabled")
 
     def open_users(self):
         # Aquí abrirás la interfaz de usuarios (lógica aún por implementar)
@@ -469,6 +489,8 @@ class CustomersWindow:
             self.user_id_entry.insert(0, user.id)
             self.user_id_entry.config(state='disabled')
 
+    def validate_phone(self, phone):
+        return len(phone) == 10
 
     def search_customer(self):
         customer_id = self.id_entry.get()
@@ -508,6 +530,11 @@ class CustomersWindow:
         name = self.client_name_entry.get()
         phone = self.phone_entry.get()
         userid = self.user_id_entry.get()
+
+        if not self.validate_phone(phone):
+            messagebox.showerror("Error", "El número de teléfono debe tener exactamente 10 caracteres.")
+            return
+
         customer = Customer(id=None, name=name, phone=phone, userid=userid)
 
         try:
@@ -981,30 +1008,59 @@ class RepairsWindow:
             messagebox.showerror("Error", "Por favor ingrese las fechas en el formato correcto: dd-mm-yyyy")
             return None
 
+    def check_stock(self, partid, quantity_diff, old_quantity=0):
+        part = self.parts_service.get_parts_by_id(partid)
+        return part.stock + old_quantity >= quantity_diff
+
     def create_repair(self):
         global editing_mode
         if not validate_fields([self.matricula_entry, self.parts_combobox, self.date_in_entry, self.date_out_entry, self.quantity_entry, self.failure_entry]):
             return
         matricula = self.matricula_entry.get()
         partid = self.part_id_entry.get()
-        in_date = self.convert_date_format(self.date_in_entry.get())
-        out_date = self.convert_date_format(self.date_out_entry.get())
-        quantity = self.quantity_entry.get()
+        in_date_str = self.date_in_entry.get()
+        out_date_str = self.date_out_entry.get()
+        quantity = int(self.quantity_entry.get())
         problem = self.failure_entry.get()
 
+        in_date = self.convert_date_format(in_date_str)
+        out_date = self.convert_date_format(out_date_str)
+
         if not in_date or not out_date:
+            return
+
+        in_date_obj = datetime.strptime(in_date, '%Y-%m-%d')
+        out_date_obj = datetime.strptime(out_date, '%Y-%m-%d')
+
+        if in_date_obj >= out_date_obj:
+            messagebox.showerror("Error", "La fecha de entrada debe ser menor a la fecha de salida.")
+            return
+
+        if quantity < 1:
+            messagebox.showerror("Error", "La cantidad debe ser 1 o mayor.")
             return
 
         repair = Repair(id_repair=None, matricula=matricula, id_part=partid, in_date=in_date, out_date=out_date, quantity=quantity, problem=problem)
 
         try:
             if editing_mode:
-                repair.id_repair = int(self.repair_id_label.cget("text"))
+                old_repair = self.get_old_repair(int(self.repair_id_label.cget("text")))
+                quantity_diff = quantity - int(old_repair.quantity)
+                if not self.check_stock(partid, quantity_diff, int(old_repair.quantity)):
+                    messagebox.showerror("Error", "No hay suficiente stock para completar la operacion.")
+                    return
+                repair.id_repair = old_repair.id_repair
                 self.repair_service.update_repair(repair)
                 messagebox.showinfo("Éxito", "Reparación actualizada exitosamente.")
             else:
+                quantity_diff = quantity
+                if not self.check_stock(partid, quantity_diff):
+                    messagebox.showerror("Error", "No hay suficiente stock para completar la operación.")
+                    return
                 self.repair_service.create_repair(repair)
                 messagebox.showinfo("Éxito", "Reparación creada exitosamente.")
+
+            self.update_stock(partid, quantity_diff)
 
             self.clear_fields()
             self.disable_fields()
@@ -1022,6 +1078,17 @@ class RepairsWindow:
             self.save_button.config(state='disabled')
             self.cancel_button.config(state='disabled')
             editing_mode = False
+
+    def update_stock(self, partid, quantity_diff):
+        part = self.parts_service.get_parts_by_id(partid)
+        new_stock = part.stock - quantity_diff
+        if new_stock < 0:
+            messagebox.showerror("Error", "No hay suficiente stock para completar la operación.")
+            return
+        self.parts_service.update_stock(partid, new_stock)
+
+    def get_old_repair(self, repair_id):
+        return self.repair_service.get_repair_by_id(repair_id)
 
     def on_cancel(self):
         self.clear_fields()
