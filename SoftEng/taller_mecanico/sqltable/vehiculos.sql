@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 30-09-2024 a las 06:14:03
+-- Tiempo de generación: 03-10-2024 a las 09:04:02
 -- Versión del servidor: 8.3.0
 -- Versión de PHP: 8.2.18
 
@@ -36,6 +36,13 @@ CREATE TABLE IF NOT EXISTS `vehiculos` (
   PRIMARY KEY (`matricula`),
   KEY `cliente_id` (`cliente_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Volcado de datos para la tabla `vehiculos`
+--
+
+INSERT INTO `vehiculos` (`matricula`, `cliente_id`, `marca`, `modelo`) VALUES
+('XAW01', 7, 'Honda', 'Civic');
 
 --
 -- Restricciones para tablas volcadas
