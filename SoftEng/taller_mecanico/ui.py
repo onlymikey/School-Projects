@@ -2,10 +2,13 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import re
+from datetime import datetime
 
 # User imports
 from Controllers.user_controller import UserController
+from Models.repair_model import Repair
 from Models.user_model import User
+from Services.parts_service import PartsService
 from Services.user_service import UserService
 
 # Customer imports
@@ -15,6 +18,16 @@ from Services.customer_service import CustomerService
 # Vehicle imports
 from Services.vehicle_service import VehicleService
 from Models.vehicle_model import Vehicle
+
+# Parts imports
+from Services.parts_service import PartsService
+from Models.parts_model import Parts
+
+# Repair imports
+from Services.repair_service import RepairService
+from Models.repair_model import Repair
+
+# Global variables
 
 global editing_mode
 global logged_in_user_id
@@ -134,8 +147,8 @@ class MenuWindow:
         file_menu.add_command(label="Users", command=self.open_users)
         file_menu.add_command(label="Customers", command=self.open_customers)
         file_menu.add_command(label="Vehicles", command=self.open_vehicles)
-        file_menu.add_command(label="Service")
-        file_menu.add_command(label="Parts")
+        file_menu.add_command(label="Repairs", command=self.open_repairs)
+        file_menu.add_command(label="Parts", command=self.open_parts)
         file_menu.add_separator()  # Línea separadora
         file_menu.add_command(label="Exit", command=self.root.quit)
 
@@ -159,6 +172,16 @@ class MenuWindow:
         # Aquí abrirás la interfaz de vehículos (lógica aún por implementar)
         self.frame.grid_forget()
         VehicleWindow(self.root)
+
+    def open_parts(self):
+        # Aquí abrirás la interfaz de partes (lógica aún por implementar)
+        self.frame.grid_forget()
+        PartsWindow(self.root)
+
+    def open_repairs(self):
+        # Aquí abrirás la interfaz de reparaciones (lógica aún por implementar)
+        self.frame.grid_forget()
+        RepairsWindow(self.root)
 
 
 class UsersWindow:
@@ -538,6 +561,7 @@ class CustomersWindow:
     def clear_fields(self):
         self.client_name_entry.delete(0, tk.END)
         self.phone_entry.delete(0, tk.END)
+        self.client_id_label.config(text="")
 
     def enable_fields(self):
         self.client_name_entry.config(state='normal')
@@ -572,7 +596,7 @@ class VehicleWindow:
         self.search_button = ttk.Button(self.frame, text="Buscar", command=self.search_vehicle)
         self.search_button.grid(row=0, column=2, padx=2, pady=2)
 
-        # Fila 2: Label "Cliente ID:"
+        # Fila 2: Label "Matricula:"
         ttk.Label(self.frame, text="Matricula:").grid(row=1, column=0, sticky="w", padx=2, pady=2)
         self.registration_entry = ttk.Entry(self.frame, width=20)
         self.registration_entry.grid(row=1, column=1, padx=2, pady=2, sticky="ew")
@@ -693,8 +717,8 @@ class VehicleWindow:
             messagebox.showerror("Error", "Por favor ingrese una matrícula.")
 
     def on_new(self):
-        self.clear_fields()
         self.enable_fields()
+        self.clear_fields()
         self.search_button.config(state='disabled')
         self.edit_button.config(state='disabled')
         self.save_button.config(state='enabled')
@@ -763,7 +787,6 @@ class VehicleWindow:
     def clear_fields(self):
         self.registration_entry.config(state='normal')  # Ensure the entry is editable
         self.registration_entry.delete(0, tk.END)  # Clear the entry field
-        self.registration_entry.config(state='disabled')  # Optionally, disable the entry again if needed
         self.client_name_combobox.delete(0, tk.END)
         self.client_id_entry.config(state='normal')  # Ensure the entry is editable
         self.client_id_entry.delete(0, tk.END)  # Clear the entry field
@@ -784,3 +807,438 @@ class VehicleWindow:
         self.brand_entry.config(state='disabled')
         self.model_entry.config(state='disabled')
 
+
+class RepairsWindow:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Repair")
+        self.repair_service = RepairService()
+        self.parts_service = PartsService()
+        global editing_mode
+        editing_mode = False
+
+        # Crear un contenedor principal
+        self.frame = ttk.Frame(self.root, padding="5 5 5 5")
+        self.frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+
+        # Ajustar redimensionamiento
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+
+        # Fila 1: Label "Ingrese ID a buscar:" + Entry + Botón "Buscar"
+        ttk.Label(self.frame, text="Ingrese ID a buscar:").grid(row=0, column=0, sticky="w", padx=2, pady=2)
+        self.repair_id_entry = ttk.Entry(self.frame, width=20)
+        self.repair_id_entry.grid(row=0, column=1, padx=2, pady=2, sticky="ew")  # Se ajusta el `sticky` para expandir Entry
+        self.search_button = ttk.Button(self.frame, text="Buscar", command=self.search_repair)
+        self.search_button.grid(row=0, column=2, padx=2, pady=2)
+
+        # Fila 2: Label "Reparación ID:"
+        ttk.Label(self.frame, text="Reparación ID:").grid(row=1, column=0, sticky="w", padx=2, pady=2)
+        self.repair_id_label = ttk.Label(self.frame, text="")
+        self.repair_id_label.grid(row=1, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 3: Label "Matricula" + Entry
+        ttk.Label(self.frame, text="Matricula:").grid(row=2, column=0, sticky="w", padx=2, pady=2)
+        self.matricula_entry = ttk.Entry(self.frame, width=30)
+        self.matricula_entry.grid(row=2, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 4: Label "Pieza" + Entry + Label "Pieza ID" + Entry
+        ttk.Label(self.frame, text="Pieza:").grid(row=3, column=0, sticky="w", padx=2, pady=2)
+        self.parts_combobox = ttk.Combobox(self.frame, state="readonly")
+        self.parts_combobox.grid(row=3, column=1, padx=2, pady=2, sticky="ew")
+        self.parts_combobox.bind("<<ComboboxSelected>>", self.on_part_selected)
+
+        ttk.Label(self.frame, text="Pieza ID:").grid(row=3, column=2, sticky="w", padx=2, pady=2)
+        self.part_id_entry = ttk.Entry(self.frame, width=30)
+        self.part_id_entry.grid(row=3, column=3, padx=2, pady=2, sticky="ew")
+
+        # Fila 5: Label "Fecha de entrada" + Entry
+        ttk.Label(self.frame, text="Fecha de entrada:").grid(row=4, column=0, sticky="w", padx=2, pady=2)
+        self.date_in_entry = ttk.Entry(self.frame, width=30)
+        self.date_in_entry.grid(row=4, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 6: Label "Fecha de Salida" + Entry
+        ttk.Label(self.frame, text="Fecha de salida:").grid(row=5, column=0, sticky="w", padx=2, pady=2)
+        self.date_out_entry = ttk.Entry(self.frame, width=30)
+        self.date_out_entry.grid(row=5, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 7: Cantidad + Entry
+        ttk.Label(self.frame, text="Cantidad:").grid(row=6, column=0, sticky="w", padx=2, pady=2)
+        self.quantity_entry = ttk.Entry(self.frame, width=30)
+        self.quantity_entry.grid(row=6, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 8: Falla + Entry
+        ttk.Label(self.frame, text="Falla:").grid(row=7, column=0, sticky="w", padx=2, pady=2)
+        self.failure_entry = ttk.Entry(self.frame, width=30)
+        self.failure_entry.grid(row=7, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 9: Botones "Nuevo", "Salvar", "Cancelar", "Editar"
+        button_frame = ttk.Frame(self.frame)
+        button_frame.grid(row=8, column=0, columnspan=3, pady=10)
+
+        self.new_button = ttk.Button(button_frame, text="Nuevo", command=self.on_new)
+        self.new_button.grid(row=0, column=0, padx=5)
+
+        self.save_button = ttk.Button(button_frame, text="Salvar", command=self.create_repair)
+        self.save_button.grid(row=0, column=1, padx=5)
+
+        self.cancel_button = ttk.Button(button_frame, text="Cancelar", command=self.on_cancel)
+        self.cancel_button.grid(row=0, column=2, padx=5)
+
+        self.edit_button = ttk.Button(button_frame, text="Editar", command=self.on_edit)
+        self.edit_button.grid(row=0, column=3, padx=5)
+
+        # Ajuste de redimensionamiento de columnas
+        self.frame.grid_columnconfigure(0, weight=0)  # Evitamos que se expanda demasiado
+        self.frame.grid_columnconfigure(1, weight=1)  # Solo la columna 1 se expandirá
+        self.frame.grid_columnconfigure(2, weight=0)  # Evitamos que la columna del botón Buscar se expanda
+
+        # Ajustar tamaño de la ventana
+        self.root.geometry("600x300")
+
+        # Desactivar campos de texto y botones por defecto
+        self.disable_fields()
+        self.save_button.config(state='disabled')
+        self.cancel_button.config(state='disabled')
+
+        self.populate_parts_info()
+
+    def populate_parts_info(self):
+        part_names = self.parts_service.get_all_parts_names()
+        self.parts_combobox['values'] = part_names
+        print(f"Combobox populated with: {part_names}")
+
+    def on_part_selected(self, event):
+        print("on_part_selected function executed") # Debug print
+        selected_name = self.parts_combobox.get()
+        print(f"Selected part name: {selected_name}") # Debug print
+        part = self.parts_service.get_parts_by_name(selected_name)
+        if part:
+            self.part_id_entry.config(state='normal')
+            self.part_id_entry.delete(0, tk.END)
+            self.part_id_entry.insert(0, part.partid)
+            self.part_id_entry.config(state='disabled')
+            print(f"Debug: part_id_entry type: {type(part.partid)}")
+
+    def search_repair(self):
+        repair_id = self.repair_id_entry.get()
+        if repair_id:
+            try:
+                repair = self.repair_service.get_repair_by_id(int(repair_id))
+                if repair:
+                    self.repair_id_label.config(text=repair.id_repair)
+                    self.matricula_entry.config(state='normal')
+                    self.matricula_entry.delete(0, tk.END)
+                    self.matricula_entry.insert(0, repair.matricula)
+                    self.matricula_entry.config(state='disabled')
+
+                    part = self.parts_service.get_parts_by_id(repair.id_part)
+                    if part:
+                        self.parts_combobox.set(part.description)
+                        self.part_id_entry.config(state='normal')
+                        self.part_id_entry.delete(0, tk.END)
+                        self.part_id_entry.insert(0, part.partid)
+                        self.part_id_entry.config(state='disabled')
+
+                    self.date_in_entry.config(state='normal')
+                    self.date_in_entry.delete(0, tk.END)
+                    self.date_in_entry.insert(0, repair.in_date)
+                    self.date_in_entry.config(state='disabled')
+
+                    self.date_out_entry.config(state='normal')
+                    self.date_out_entry.delete(0, tk.END)
+                    self.date_out_entry.insert(0, repair.out_date)
+                    self.date_out_entry.config(state='disabled')
+
+                    self.quantity_entry.config(state='normal')
+                    self.quantity_entry.delete(0, tk.END)
+                    self.quantity_entry.insert(0, repair.quantity)
+                    self.quantity_entry.config(state='disabled')
+
+                    self.failure_entry.config(state='normal')
+                    self.failure_entry.delete(0, tk.END)
+                    self.failure_entry.insert(0, repair.problem)
+                    self.failure_entry.config(state='disabled')
+                else:
+                    messagebox.showerror("Error", "Reparación no encontrada.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al buscar la reparación: {e}")
+        else:
+            messagebox.showerror("Error", "Por favor ingrese un ID de reparación.")
+
+    def on_new(self):
+        self.enable_fields()
+        self.clear_fields()
+        self.search_button.config(state='disabled')
+        self.edit_button.config(state='disabled')
+        self.save_button.config(state='enabled')
+        self.cancel_button.config(state='enabled')
+
+    def convert_date_format(self, date_str):
+        try:
+            return datetime.strptime(date_str, '%d-%m-%Y').strftime('%Y-%m-%d')
+        except ValueError:
+            messagebox.showerror("Error", "Por favor ingrese las fechas en el formato correcto: dd-mm-yyyy")
+            return None
+
+    def create_repair(self):
+        global editing_mode
+        if not validate_fields([self.matricula_entry, self.parts_combobox, self.date_in_entry, self.date_out_entry, self.quantity_entry, self.failure_entry]):
+            return
+        matricula = self.matricula_entry.get()
+        partid = self.part_id_entry.get()
+        in_date = self.convert_date_format(self.date_in_entry.get())
+        out_date = self.convert_date_format(self.date_out_entry.get())
+        quantity = self.quantity_entry.get()
+        problem = self.failure_entry.get()
+
+        if not in_date or not out_date:
+            return
+
+        repair = Repair(id_repair=None, matricula=matricula, id_part=partid, in_date=in_date, out_date=out_date, quantity=quantity, problem=problem)
+
+        try:
+            if editing_mode:
+                repair.id_repair = int(self.repair_id_label.cget("text"))
+                self.repair_service.update_repair(repair)
+                messagebox.showinfo("Éxito", "Reparación actualizada exitosamente.")
+            else:
+                self.repair_service.create_repair(repair)
+                messagebox.showinfo("Éxito", "Reparación creada exitosamente.")
+
+            self.clear_fields()
+            self.disable_fields()
+            self.search_button.config(state='enabled')
+            self.edit_button.config(state='enabled')
+            self.save_button.config(state='disabled')
+            self.cancel_button.config(state='disabled')
+            self.new_button.config(state='enabled')
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al crear la reparación: {e}")
+            self.clear_fields()
+            self.disable_fields()
+            self.search_button.config(state='enabled')
+            self.edit_button.config(state='enabled')
+            self.save_button.config(state='disabled')
+            self.cancel_button.config(state='disabled')
+            editing_mode = False
+
+    def on_cancel(self):
+        self.clear_fields()
+        self.disable_fields()
+        self.search_button.config(state='enabled')
+        self.edit_button.config(state='enabled')
+        self.save_button.config(state='disabled')
+        self.cancel_button.config(state='disabled')
+        self.new_button.config(state='enabled')
+
+    def on_edit(self):
+        global editing_mode
+        if not self.repair_id_label.cget("text"):
+            messagebox.showwarning("Advertencia", "Primero debe buscar una reparación antes de editar.")
+            return
+        editing_mode = True
+        self.enable_fields()
+        self.matricula_entry.config(state='disabled')
+        self.search_button.config(state='disabled')
+        self.edit_button.config(state='disabled')
+        self.save_button.config(state='enabled')
+        self.cancel_button.config(state='enabled')
+        self.new_button.config(state='disabled')
+
+    def clear_fields(self):
+        self.repair_id_label.config(text="")
+        self.matricula_entry.delete(0, tk.END)
+        self.parts_combobox.delete(0, tk.END)
+        self.part_id_entry.delete(0, tk.END)
+        self.date_in_entry.delete(0, tk.END)
+        self.date_out_entry.delete(0, tk.END)
+        self.quantity_entry.delete(0, tk.END)
+        self.failure_entry.delete(0, tk.END)
+
+    def enable_fields(self):
+        self.matricula_entry.config(state='normal')
+        self.parts_combobox.config(state='normal')
+        self.date_in_entry.config(state='normal')
+        self.date_out_entry.config(state='normal')
+        self.quantity_entry.config(state='normal')
+        self.failure_entry.config(state='normal')
+
+    def disable_fields(self):
+        self.matricula_entry.config(state='disabled')
+        self.parts_combobox.config(state='disabled')
+        self.part_id_entry.config(state='disabled')
+        self.date_in_entry.config(state='disabled')
+        self.date_out_entry.config(state='disabled')
+        self.quantity_entry.config(state='disabled')
+        self.failure_entry.config(state='disabled')
+
+
+class PartsWindow:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Parts")
+        self.parts_service = PartsService()
+        global editing_mode
+        editing_mode = False
+
+        # Crear un contenedor principal
+        self.frame = ttk.Frame(self.root, padding="5 5 5 5")
+        self.frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+
+        # Ajustar redimensionamiento
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+
+        # Fila 1: Label "Ingrese ID a buscar:" + Entry + Botón "Buscar"
+        ttk.Label(self.frame, text="Ingrese ID a buscar:").grid(row=0, column=0, sticky="w", padx=2, pady=2)
+        self.id_entry = ttk.Entry(self.frame, width=20)
+        self.id_entry.grid(row=0, column=1, padx=2, pady=2, sticky="ew")  # Se ajusta el `sticky` para expandir Entry
+        self.search_button = ttk.Button(self.frame, text="Buscar", command= self.search_part)
+        self.search_button.grid(row=0, column=2, padx=2, pady=2)
+
+        # Fila 2: Label "Cliente ID:"
+        ttk.Label(self.frame, text="ID Pieza:").grid(row=1, column=0, sticky="w", padx=2, pady=2)
+        self.part_id_label = ttk.Label(self.frame, text="")
+        self.part_id_label.grid(row=1, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 3: Label Descripción + Entry
+        ttk.Label(self.frame, text="Descripción:").grid(row=2, column=0, sticky="w", padx=2, pady=2)
+        self.description_entry = ttk.Entry(self.frame, width=30)
+        self.description_entry.grid(row=2, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 5: Label "Stock" + Entry
+        ttk.Label(self.frame, text="Stock:").grid(row=4, column=0, sticky="w", padx=2, pady=2)
+        self.stock_entry = ttk.Entry(self.frame, width=30)
+        self.stock_entry.grid(row=4, column=1, padx=2, pady=2, sticky="ew")
+
+        # Fila 7: Botones "Nuevo", "Salvar", "Cancelar", "Editar"
+        button_frame = ttk.Frame(self.frame)
+        button_frame.grid(row=6, column=0, columnspan=3, pady=10)
+
+        self.new_button = ttk.Button(button_frame, text="Nuevo", command=self.on_new)
+        self.new_button.grid(row=0, column=0, padx=5)
+
+        self.save_button = ttk.Button(button_frame, text="Salvar", command=self.create_part)
+        self.save_button.grid(row=0, column=1, padx=5)
+
+        self.cancel_button = ttk.Button(button_frame, text="Cancelar", command=self.on_cancel)
+        self.cancel_button.grid(row=0, column=2, padx=5)
+
+        self.edit_button = ttk.Button(button_frame, text="Editar", command=self.on_edit)
+        self.edit_button.grid(row=0, column=3, padx=5)
+
+        # Ajuste de redimensionamiento de columnas
+        self.frame.grid_columnconfigure(0, weight=0)  # Evitamos que se expanda demasiado
+        self.frame.grid_columnconfigure(1, weight=1)  # Solo la columna 1 se expandirá
+        self.frame.grid_columnconfigure(2, weight=0)  # Evitamos que la columna del botón Buscar se expanda
+
+        # Ajustar tamaño de la ventana
+        self.root.geometry("600x250")
+
+        # Desactivar campos de texto y botones por defecto
+        self.disable_fields()
+        self.save_button.config(state='disabled')
+        self.cancel_button.config(state='disabled')
+
+    def enable_fields(self):
+        self.description_entry.config(state='normal')
+        self.stock_entry.config(state='normal')
+
+    def disable_fields(self):
+        self.description_entry.config(state='disabled')
+        self.stock_entry.config(state='disabled')
+
+    def clear_fields(self):
+        self.description_entry.delete(0, tk.END)
+        self.stock_entry.delete(0, tk.END)
+        self.part_id_label.config(text="")
+
+
+    def search_part(self):
+        part_id = self.id_entry.get()
+        if part_id:
+            try:
+                part = self.parts_service.get_parts_by_id(int(part_id))
+                if part:
+                    self.part_id_label.config(text=part.partid)
+                    self.description_entry.config(state='normal')
+                    self.description_entry.delete(0, tk.END)
+                    self.description_entry.insert(0, part.description)
+                    self.description_entry.config(state='disabled')
+
+                    self.stock_entry.config(state='normal')
+                    self.stock_entry.delete(0, tk.END)
+                    self.stock_entry.insert(0, part.stock)
+                    self.stock_entry.config(state='disabled')
+                else:
+                    messagebox.showerror("Error", "Parte no encontrada.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al buscar la parte: {e}")
+        else:
+            messagebox.showerror("Error", "Por favor ingrese un ID de parte.")
+
+
+    def on_new(self):
+        self.enable_fields()
+        self.clear_fields()
+        self.search_button.config(state='disabled')
+        self.edit_button.config(state='disabled')
+        self.save_button.config(state='enabled')
+        self.cancel_button.config(state='enabled')
+
+    def create_part(self):
+        global editing_mode
+        if not validate_fields([self.description_entry, self.stock_entry]):
+            return
+        description = self.description_entry.get()
+        stock = self.stock_entry.get()
+        part = Parts(partid=None, description=description, stock=stock)
+
+        try:
+            if editing_mode:
+                part.partid = int(self.part_id_label.cget("text"))
+                self.parts_service.update_parts(part)
+                messagebox.showinfo("Éxito", "Parte actualizada exitosamente.")
+            else:
+                self.parts_service.create_parts(part)
+                messagebox.showinfo("Éxito", "Parte creada exitosamente.")
+
+            self.clear_fields()
+            self.disable_fields()
+            self.search_button.config(state='enabled')
+            self.edit_button.config(state='enabled')
+            self.save_button.config(state='disabled')
+            self.cancel_button.config(state='disabled')
+            self.new_button.config(state='enabled')
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al crear la parte: {e}")
+            self.clear_fields()
+            self.disable_fields()
+            self.search_button.config(state='enabled')
+            self.edit_button.config(state='enabled')
+            self.save_button.config(state='disabled')
+            self.cancel_button.config(state='disabled')
+            editing_mode = False
+
+    def on_cancel(self):
+        self.clear_fields()
+        self.disable_fields()
+        self.search_button.config(state='enabled')
+        self.edit_button.config(state='enabled')
+        self.save_button.config(state='disabled')
+        self.cancel_button.config(state='disabled')
+        self.new_button.config(state='enabled')
+
+    def on_edit(self):
+        global editing_mode
+        if not self.part_id_label.cget("text"):
+            messagebox.showwarning("Advertencia", "Primero debe buscar una parte antes de editar.")
+            return
+        editing_mode = True
+        self.enable_fields()
+        self.search_button.config(state='disabled')
+        self.edit_button.config(state='disabled')
+        self.save_button.config(state='enabled')
+        self.cancel_button.config(state='enabled')
+        self.new_button.config(state='disabled')
