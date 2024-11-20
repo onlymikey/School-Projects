@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <limits> 
+
 using namespace std;
 
 // Clase Producto
@@ -137,6 +139,38 @@ public:
     }
 };
 
+// Función para validar la entrada de un número entero
+int obtenerEntero() {
+    int valor;
+    while (true) {
+        cin >> valor;
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Entrada no válida. Por favor, ingrese un número entero: ";
+        } else {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return valor;
+        }
+    }
+}
+
+// Función para validar la entrada de un número de punto flotante
+double obtenerDouble() {
+    double valor;
+    while (true) {
+        cin >> valor;
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Entrada no válida. Por favor, ingrese un número: ";
+        } else {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return valor;
+        }
+    }
+}
+
 // Main
 int main() {
     SistemaDeGestion sistema;
@@ -158,7 +192,7 @@ int main() {
         cout << "6. Salir\n";
         cout << "****************************\n";
         cout << "Seleccione una opción: ";
-        cin >> opcion;
+        opcion = obtenerEntero();
 
         switch (opcion) {
             case 1:
@@ -177,10 +211,10 @@ int main() {
                 do {
                     sistema.mostrarMenu();
                     cout << "Ingrese el índice del producto a agregar (0 para terminar): ";
-                    cin >> productoIndex;
+                    productoIndex = obtenerEntero();
                     if (productoIndex > 0 && productoIndex <= sistema.menu.size()) {
                         cout << "Ingrese la cantidad: ";
-                        cin >> cantidad;
+                        cantidad = obtenerEntero();
                         sistema.agregarProductoAPedido(pedidoIndex, productoIndex - 1, cantidad);
                     } else if (productoIndex != 0) {
                         cout << "Índice de producto no válido.\n";
@@ -193,7 +227,7 @@ int main() {
                 cout << "\n--- Modificar Pedido ---\n";
                 int pedidoIndex;
                 cout << "Ingrese el índice del pedido: ";
-                cin >> pedidoIndex;
+                pedidoIndex = obtenerEntero();
                 if (pedidoIndex > 0 && pedidoIndex <= sistema.pedidos.size()) {
                     int productoIndex, cantidad;
                     string accion;
@@ -201,19 +235,19 @@ int main() {
                     do {
                         sistema.mostrarMenu();
                         cout << "Ingrese el índice del producto: ";
-                        cin >> productoIndex;
+                        productoIndex = obtenerEntero();
                         if (productoIndex > 0 && productoIndex <= sistema.menu.size()) {
                             cout << "Ingrese la acción (1. agregar / 2. eliminar): ";
-                            cin >> accionNum;
+                            accionNum = obtenerEntero();
                             if (accionNum == 1) {
                                 accion = "agregar";
                                 cout << "Ingrese la cantidad: ";
-                                cin >> cantidad;
+                                cantidad = obtenerEntero();
                                 sistema.modificarPedido(pedidoIndex - 1, productoIndex - 1, accion, cantidad);
                             } else if (accionNum == 2) {
                                 accion = "eliminar";
                                 cout << "Ingrese la cantidad: ";
-                                cin >> cantidad;
+                                cantidad = obtenerEntero();
                                 sistema.modificarPedido(pedidoIndex - 1, productoIndex - 1, accion, cantidad);
                             } else {
                                 cout << "Acción no válida.\n";
@@ -222,7 +256,7 @@ int main() {
                             cout << "Índice de producto no válido.\n";
                         }
                         cout << "¿Desea modificar algo más en este pedido? (1. Sí / 0. No): ";
-                        cin >> accionNum;
+                        accionNum = obtenerEntero();
                     } while (accionNum == 1);
                 } else {
                     cout << "Índice de pedido no válido.\n";
@@ -239,7 +273,7 @@ int main() {
                 cout << "1. Agregar nuevo producto\n";
                 cout << "2. Modificar existencias de producto\n";
                 cout << "Seleccione una opción: ";
-                cin >> subOpcion;
+                subOpcion = obtenerEntero();
                 if (subOpcion == 1) {
                     string nombre;
                     double precio;
@@ -247,18 +281,18 @@ int main() {
                     cout << "Ingrese el nombre del producto: ";
                     cin >> nombre;
                     cout << "Ingrese el precio del producto: ";
-                    cin >> precio;
+                    precio = obtenerDouble();
                     cout << "Ingrese las existencias del producto: ";
-                    cin >> existencias;
+                    existencias = obtenerEntero();
                     sistema.agregarProductoAlMenu(nombre, precio, existencias);
                     cout << "Producto agregado al menú.\n";
                 } else if (subOpcion == 2) {
                     int productoIndex, nuevasExistencias;
                     sistema.mostrarMenu();
                     cout << "Ingrese el índice del producto: ";
-                    cin >> productoIndex;
+                    productoIndex = obtenerEntero();
                     cout << "Ingrese las nuevas existencias: ";
-                    cin >> nuevasExistencias;
+                    nuevasExistencias = obtenerEntero();
                     sistema.modificarExistencias(productoIndex - 1, nuevasExistencias);
                 } else {
                     cout << "Opción no válida.\n";
