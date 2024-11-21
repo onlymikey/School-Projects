@@ -279,7 +279,8 @@ int main() {
                     double precio;
                     int existencias;
                     cout << "Ingrese el nombre del producto: ";
-                    cin >> nombre;
+                    cin.ignore(); // Limpiar el buffer
+                    getline(cin, nombre); // Permitir nombres con espacios
                     cout << "Ingrese el precio del producto: ";
                     precio = obtenerDouble();
                     cout << "Ingrese las existencias del producto: ";
