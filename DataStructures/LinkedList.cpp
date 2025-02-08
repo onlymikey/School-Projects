@@ -16,6 +16,8 @@ class LinkedList {
   public:
     Vertex *head, *tail;
     void append(string valor);
+    void InsertHead(string valor);
+    void SelectedInsert(string valor, int pos);
         void print();
         LinkedList() {
             head = tail = NULL;
@@ -23,12 +25,44 @@ class LinkedList {
         };
 
         void LinkedList::append(string valor) {
-            Vertex *nuevo = new Vertex(valor);
+            Vertex *vtx = new Vertex(valor);
             if (head == NULL) {
-                head = tail = nuevo;
+                head = tail = vtx;
             } else {
-                tail->next = nuevo;
-                tail = nuevo;
+                tail->next = vtx;
+                tail = vtx;
+            }
+        }
+
+        void LinkedList::InsertHead(string valor) {
+            Vertex *vtx = new Vertex(valor);
+            vtx->next = head;
+            head = vtx;
+            if (tail == NULL)
+                tail = head;
+        }
+
+        void LinkedList::SelectedInsert(string valor, int pos) {
+            Vertex *vtx = new Vertex(valor);
+            if (pos == 0) {
+                InsertHead(valor);
+            }
+            else if (pos < 0) {
+                cout << "Posicion no valida" << endl;
+            }
+            else {
+                Vertex *temp = head;
+                for (int i = 0; i < pos - 1; i++) {
+                    temp = temp->next;
+                    if (temp == NULL) {
+                        cout << "Posicion no valida" << endl;
+                        return;
+                    }
+                }
+                vtx->next = temp->next;
+                temp->next = vtx;
+                if (vtx->next == NULL)
+                    tail = vtx;
             }
         }
 
@@ -41,21 +75,25 @@ void LinkedList::print() {
     cout << endl;
 }
 
-void InsertHead(Vertex **head, string valor) {
-    Vertex *nuevo = new Vertex(valor);
-    nuevo->next = *head;
-    *head = nuevo;
-}
-
 int main() {
     LinkedList lista;
-            cout << "Agrega 10 elementos a la lista" << endl;
-
-            for (int i = 0; i < 10; i++) {
-                string valor;
-                cout << "Elemento " << i + 1 << ": ";
+            int pos;
+            string valor;
+            lista.print();
+            lista.append("1");
+            lista.print();
+            lista.append("2");
+            lista.print();
+            lista.append("3");
+            lista.print();
+            lista.append("4");
+            lista.print();
+            lista.append("5");
+            lista.print();
+                cout << "Elemento: ";
                 cin >> valor;
-                lista.append(valor);
-            }
+                cout << "Posicion: ";
+                cin >> pos;
+                lista.SelectedInsert(valor, pos);
     lista.print();
 }
