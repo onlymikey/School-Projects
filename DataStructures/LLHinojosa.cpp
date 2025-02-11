@@ -6,14 +6,14 @@ public:
     Vertex *next;
     Vertex(int data){
         this->data = data;
-        next = nullptrptr;
+        next = nullptr;
     }
 };
 class LL{
 private:
     Vertex *head,*tail;
 public:
-    LL(){ head = tail = nullptrptr;}
+    LL(){ head = tail = nullptr;}
     void insertHead(int data);
     void insertTail(int data);
     void deleteHead();
@@ -21,14 +21,14 @@ public:
 };
 void LL::print(){
     //Print all elements of the list
-    //To consider: Prints until nullptrptr or tail
+    //To consider: Prints until nullptr or tail
     // To Do: what if its empty?
-    if(head == nullptrptr){
+    if(head == nullptr){
         cout<<"Empty list"<<endl;
         return;
     }
     Vertex *temp = head;
-    while(temp != nullptrptr){
+    while(temp != nullptr){
         cout<<temp->data<<" ";
         temp = temp->next;
     }
@@ -40,23 +40,23 @@ void LL::insertHead(int data){
     Vertex *vtx = new Vertex(data);
     vtx->next = head;
     head = vtx;
-    if(tail == nullptrptr)
+    if(tail == nullptr)
         tail = head;
 }
 void LL::insertTail(int data){
     //Insert element at the end
     Vertex *vtx = new Vertex(data);
-    if(tail != nullptrptr)
+    if(tail != nullptr)
         tail->next = vtx;
     tail = vtx;
     //Check if its empty
-    if(head == nullptrptr)
+    if(head == nullptr)
         head = tail;
 }
 void LL::deleteHead(){
     //Deletes first element of the list
     //Check if empty list
-    if(head ==  nullptrptr)  {
+    if(head ==  nullptr)  {
         cout<<"Already empty";
         return;
     }
@@ -65,8 +65,8 @@ void LL::deleteHead(){
     head = temp->next;
     delete temp;
     //Consider if only one element
-    if(head == nullptrptr)
-        tail = nullptrptr;
+    if(head == nullptr)
+        tail = nullptr;
 }
 int main() {
     LL lista;

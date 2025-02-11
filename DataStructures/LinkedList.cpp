@@ -8,7 +8,7 @@ public:
     Vertex *next;
     Vertex(string valor) {
         data = valor;
-        next = nullptr;
+        next = NULL;
     }
 };
 
@@ -18,17 +18,15 @@ class LinkedList {
     void append(string valor);
     void InsertHead(string valor);
     void SelectedInsert(string valor, int pos);
-    void DeleteTail();
-    void DeleteHead();
         void print();
         LinkedList() {
-            head = tail = nullptr;
+            head = tail = NULL;
         }
         };
 
         void LinkedList::append(string valor) {
             Vertex *vtx = new Vertex(valor);
-            if (head == nullptr) {
+            if (head == NULL) {
                 head = tail = vtx;
             } else {
                 tail->next = vtx;
@@ -40,43 +38,13 @@ class LinkedList {
             Vertex *vtx = new Vertex(valor);
             vtx->next = head;
             head = vtx;
-            if (tail == nullptr)
+            if (tail == NULL)
                 tail = head;
-        }
-
-        void LinkedList::DeleteTail() {
-            //Deletes first element of the list
-            //Check if empty list
-            if(head ==  nullptr)  {
-                cout<<"Already empty";
-                return;
-            }
-            Vertex *temp;
-            temp = tail;
-            tail = temp->next;
-            delete temp;
-        }
-
-        void LinkedList::DeleteHead(){
-            //Deletes first element of the list
-            //Check if empty list
-            if(head ==  nullptr)  {
-                cout<<"Already empty";
-                return;
-            }
-            Vertex *temp;
-            temp = head;
-            head = temp->next;
-            delete temp;
-            //Consider if only one element
-            if(head == nullptr)
-                tail = nullptr;
         }
 
         void LinkedList::SelectedInsert(string valor, int pos) {
             Vertex *vtx = new Vertex(valor);
-            if (pos == 0 || head == nullptr) {
-                cout<<"Insertando en el inicio de la lista..."<<endl;
+            if (pos == 0) {
                 InsertHead(valor);
             }
             else if (pos < 0) {
@@ -86,21 +54,21 @@ class LinkedList {
                 Vertex *temp = head;
                 for (int i = 0; i < pos - 1; i++) {
                     temp = temp->next;
-                    if (temp == nullptr) {
+                    if (temp == NULL) {
                         cout << "Posicion no valida" << endl;
                         return;
                     }
                 }
                 vtx->next = temp->next;
                 temp->next = vtx;
-                if (vtx->next == nullptr)
+                if (vtx->next == NULL)
                     tail = vtx;
             }
         }
 
 void LinkedList::print() {
     Vertex *temp = head;
-    while (temp != nullptr) {
+    while (temp != NULL) {
         cout << temp->data << " ";
         temp = temp->next;
     }
@@ -111,20 +79,21 @@ int main() {
     LinkedList lista;
             int pos;
             string valor;
-            lista.InsertHead("Hola");
-            lista.InsertHead("xd");
-            lista.InsertHead("omaiga");
-            lista.InsertHead("america ya :D");
-            lista.InsertHead("Hallo");
-
+            lista.print();
+            lista.append("1");
+            lista.print();
+            lista.append("2");
+            lista.print();
+            lista.append("3");
+            lista.print();
+            lista.append("4");
+            lista.print();
+            lista.append("5");
+            lista.print();
                 cout << "Elemento: ";
                 cin >> valor;
                 cout << "Posicion: ";
                 cin >> pos;
                 lista.SelectedInsert(valor, pos);
-            lista.print();
-            // lista.DeleteHead();
-           lista.DeleteTail();
-            lista.print();
-            return 0;
+    lista.print();
 }
