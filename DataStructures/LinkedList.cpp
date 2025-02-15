@@ -21,6 +21,8 @@ class LinkedList {
     void deleteHead();
     void deleteTail();
     void InvertList();
+    void CompareList(LinkedList lista, LinkedList lista2);
+
     void deleteAt(int pos);
         void print();
         LinkedList() {
@@ -57,6 +59,30 @@ class LinkedList {
 
 
         }
+
+        void LinkedList::CompareList(LinkedList lista, LinkedList lista2) {
+            Vertex *ls1 = nullptr;
+            Vertex *ls2 = nullptr;
+
+            ls1 = lista.head;
+            ls2 = lista2.head;
+
+            while (ls1->next && ls2->next != nullptr) {
+                if ((ls1->data.empty)()) {
+                    ls1 = lista2.head;
+                }
+                if ((ls2->data.empty)()) {
+                    ls2 = lista.head;
+                }
+                if (ls1->data == ls2->data) {
+                    cout<<ls1->data<<" ";
+                }
+                ls1 = ls1->next;
+                ls2 = ls2->next;
+            }
+
+        }
+
 
 
         void LinkedList::deleteTail() {
@@ -157,16 +183,30 @@ int main() {
             int pos;
             string valor;
             lista.print();
-            lista.append("1");
+            lista.append("7");
             lista.print();
-            lista.append("2");
+            lista.append("8");
             lista.print();
             lista.append("3");
             lista.print();
             lista.append("4");
             lista.print();
-            lista.append("5");
+            lista.append("9");
             lista.print();
-            lista.InvertList();
-    lista.print();
+
+            LinkedList lista2;
+            lista2.print();
+            lista2.append("1");
+            lista2.print();
+            lista2.append("2");
+            lista2.print();
+            lista2.append("3");
+            lista2.print();
+            lista2.append("4");
+            lista2.print();
+            lista2.append("5");
+            lista2.print();
+
+            lista.CompareList(lista, lista2);
+
 }
