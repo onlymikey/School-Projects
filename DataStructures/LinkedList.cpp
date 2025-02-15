@@ -18,11 +18,68 @@ class LinkedList {
     void append(string valor);
     void InsertHead(string valor);
     void SelectedInsert(string valor, int pos);
+    void deleteHead();
+    void deleteTail();
+    void deleteAt(int pos);
         void print();
         LinkedList() {
             head = tail = NULL;
         }
         };
+
+        void LinkedList::deleteHead() {
+            if (head == NULL) {
+                cout << "Lista vacia" << endl;
+            } else {
+                Vertex *temp = head;
+                head = head->next;
+                delete temp;
+                if (head == NULL)
+                    tail = NULL;
+            }
+        }
+
+        void LinkedList::deleteTail() {
+            if (head == NULL) {
+                cout << "Lista vacia" << endl;
+            } else {
+                if (head == tail) {
+                    delete head;
+                    head = tail = NULL;
+                } else {
+                    Vertex *temp = head;
+                    while (temp->next != tail) {
+                        temp = temp->next;
+                    }
+                    delete tail;
+                    tail = temp;
+                    tail->next = NULL;
+                }
+            }
+        }
+
+        void LinkedList::deleteAt(int pos) {
+            if (head == NULL) {
+                cout << "Lista vacia" << endl;
+            } else if (pos == 0) {
+                deleteHead();
+            } else {
+                Vertex *temp = head;
+                for (int i = 0; i < pos - 1; i++) {
+                    temp = temp->next;
+                    if (temp == NULL) {
+                        cout << "Posicion no valida" << endl;
+                        return;
+                    }
+                }
+                Vertex *temp2 = temp->next;
+                temp->next = temp2->next;
+                delete temp2;
+                if (temp->next == NULL)
+                    tail = temp;
+            }
+        }
+
 
         void LinkedList::append(string valor) {
             Vertex *vtx = new Vertex(valor);
