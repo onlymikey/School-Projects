@@ -68,10 +68,10 @@ class LinkedList {
             ls2 = lista2.head;
 
             while (ls1->next && ls2->next != nullptr) {
-                if (ls1->data.empty()) {
+                if (ls1->next == nullptr) {
                     ls1 = lista2.head;
                 }
-                if (ls2->data.empty()) {
+                if (ls2->next == nullptr) {
                     ls2 = lista.head;
                 }
                 if (ls1->data == ls2->data) {
