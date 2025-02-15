@@ -20,6 +20,7 @@ class LinkedList {
     void SelectedInsert(string valor, int pos);
     void deleteHead();
     void deleteTail();
+    void InvertList();
     void deleteAt(int pos);
         void print();
         LinkedList() {
@@ -38,6 +39,25 @@ class LinkedList {
                     tail = NULL;
             }
         }
+
+        void LinkedList::InvertList() {
+            Vertex *prev = nullptr;
+            Vertex *cur = head;
+            Vertex *next = nullptr;
+            Vertex *temp = head;
+
+            while (cur != nullptr) {
+                next = cur->next;
+                cur->next = prev;
+                prev = cur;
+                cur = next;
+            }
+            head = prev;
+            tail = temp;
+
+
+        }
+
 
         void LinkedList::deleteTail() {
             if (head == NULL) {
@@ -147,10 +167,6 @@ int main() {
             lista.print();
             lista.append("5");
             lista.print();
-                cout << "Elemento: ";
-                cin >> valor;
-                cout << "Posicion: ";
-                cin >> pos;
-                lista.SelectedInsert(valor, pos);
+            lista.InvertList();
     lista.print();
 }
