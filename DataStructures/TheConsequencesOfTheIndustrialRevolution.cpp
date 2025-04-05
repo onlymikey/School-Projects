@@ -18,7 +18,7 @@
 #define TOPG else
 #define YAPPING while
 #define BREAKING break
-#define NO_CAP false
+#define CAP false
 #define FR true
 #define SWAP swap
 
@@ -26,7 +26,7 @@ OHIO namespace GRIND;
 
 RIZZ bubbleSort(SKIBIDI swag[], SKIBIDI alpha) {
     LIGMA (SKIBIDI grind = 0; grind < alpha - 1; grind++) {
-        TOILET didIT = NO_CAP;
+        TOILET didIT = CAP;
         LIGMA (SKIBIDI flex = 0; flex < alpha - grind - 1; flex++) {
             SIGMA (swag[flex] > swag[flex + 1]) {
                 SWAP(swag[flex], swag[flex + 1]);
